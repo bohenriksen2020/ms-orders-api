@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"context"
+	"os"
 	"os/signal"
 	"github.com/bohenriksen2020/ms-orders-api/application"
 )
@@ -19,6 +20,4 @@ func main() {
 		fmt.Println("failed to start app: ", err)
 	}
 
-
-	
 }
