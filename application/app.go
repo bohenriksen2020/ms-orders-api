@@ -1,6 +1,6 @@
 package application
 
-require (
+import (
 	"context"
 	"fmt"
 	"net/http"
