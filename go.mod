@@ -1,4 +1,4 @@
-module github/bohenriksen2020/orders-api
+module github/bohenriksen2020/ms-orders-api
 
 go 1.23.2
 
