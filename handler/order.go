@@ -102,8 +102,37 @@ func (h *Order) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Order) GetByID(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Get order by Id")
-	w.WriteHeader(http.StatusOK)
+	idParam := chi.URLParam(r, "id")
+
+	const base = 10
+	const bitSize = 64
+
+	orderID, err := strconv.ParseUint(idParam, base, bitSize)
+	if err != nil {
+		fmt.Println("failed to parse order id: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("idParam: ", orderID)
+
+	theOrder, err := h.Repo.FindByID(r.Context(), orderID)
+	if errors.Is(err, order.ErrNotExist) {
+		fmt.Println("order does not exist")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// unmarshal order and return it
+	res, err := json.Marshal(theOrder)
+	if err != nil {
+		fmt.Println("failed to marshal order: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(res)
+	
 }
 
 func (h *Order) UpdateByID(w http.ResponseWriter, r *http.Request) {

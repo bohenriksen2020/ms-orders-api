@@ -52,6 +52,7 @@ var ErrNotExist = errors.New("order does not exist")
 func (r *RedisRepo) FindByID(ctx context.Context, id uint64) (model.Order, error) {
 	key := orderIDKey(id)
 	value, err := r.Client.Get(ctx, key).Result()
+	fmt.Println("value: ", value)
 
 	if errors.Is(err, redis.Nil) {
 		return model.Order{}, ErrNotExist
@@ -65,6 +66,7 @@ func (r *RedisRepo) FindByID(ctx context.Context, id uint64) (model.Order, error
 		return model.Order{}, fmt.Errorf("failed to unmarshal order: %w", err)
 	}
 
+	fmt.Println("order: ", order)
 	return order, nil
 
 }

@@ -19,4 +19,4 @@ type LineItem struct {
 	ItemId uuid.UUID `json:"item_id"`
 	Quantity uint 	`json:"quantity"`
 	Price uint 		`json:"price"`
-}
+} 
