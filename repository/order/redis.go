@@ -122,13 +122,19 @@ type FindResult struct {
 }
 
 func (r *RedisRepo) FindAll(ctx context.Context, page FindAllPage) (FindResult, error) {
-	res := r.Client.SScan(ctx, "order", page.Offset, "*", int64(page.Size))
+	fmt.Println("FindAll")
+	fmt.Println("page.Offset: ", page.Offset)
+	fmt.Println("page.Size: ", page.Size)
+	res := r.Client.SScan(ctx, "orders", page.Offset, "*", int64(page.Size))
 
 	keys, cursor, err := res.Result()
 	if err != nil {
 		return FindResult{}, fmt.Errorf("failed to scan keys: %w", err)
 	}
-
+	
+	fmt.Println("keys: ", keys)
+	fmt.Println("cursor: ", cursor)
+	
 	if len(keys) == 0 {
 		return FindResult{
 			Orders: []model.Order{},
@@ -142,14 +148,14 @@ func (r *RedisRepo) FindAll(ctx context.Context, page FindAllPage) (FindResult, 
 
 	orders := make([]model.Order, 0, len(xs))
 
-	for i, x := range xs {
+	for _, x := range xs {
 		x := x.(string)
 		var order model.Order
 		err := json.Unmarshal([]byte(x), &order)
 		if err != nil {
 			return FindResult{}, fmt.Errorf("failed to unmarshal order: %w", err)
 		}
-		orders[i] = order
+		orders = append(orders, order)
 	}
 
 	return FindResult{

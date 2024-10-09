@@ -81,6 +81,9 @@ func (o *Order) List(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	fmt.Println("len(res): ", len(res.Orders))
+
 	var response struct {
 		Items []model.Order `json:"items"`
 		Next uint64        `json:"next,omitempty"`
