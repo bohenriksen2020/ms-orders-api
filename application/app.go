@@ -6,16 +6,19 @@ import (
 	"net/http"
 	"time"
 	"github.com/redis/go-redis/v9"
+	"github.com/bohenriksen2020/ms-orders-api/config"
 )
 
 type App struct {
 	router http.Handler
 	rdb    *redis.Client
+	config Config
 }
 
 func New() *App {
 	app := &App{
 		rdb: redis.NewClient(&redis.Options{ Addr: "localhost:6379", DB: 0 }),
+		config: config,
 	}
 	app.loadRoutes()
 	return app
@@ -29,8 +32,9 @@ func (a *App) Start(ctx context.Context) error {
 	}()
 
 	server := &http.Server{
-		Addr:    ":3000",
+		Addr:    fmt.Springf(":%d", a.config.ServerPort),
 		Handler: a.router,
+
 	}
 
 	err := a.rdb.Ping(ctx).Err()
