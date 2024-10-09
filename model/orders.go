@@ -10,7 +10,7 @@ type Order struct {
 	CustomerID 	uuid.UUID `json:"customer_id"`
 	LineItems 	[]LineItem `json:"line_items"`
 	Created 	*time.Time `json:"created"`
-	SnippedAt 	*time.Time `json:"shipped_at"`
+	ShippedAt 	*time.Time `json:"shipped_at"`
 	CompletedAt *time.Time `json:"completed_at"`
 
 } 
