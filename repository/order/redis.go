@@ -14,6 +14,12 @@ type RedisRepo struct {
 	Client *redis.Client
 }
 
+// NewRedisRepo creates a new RedisRepo
+func NewRedisRepo(client *redis.Client) *RedisRepo {
+	return &RedisRepo{Client: client}
+}
+
+
 func orderIDKey(id uint64) string {
 	return fmt.Sprintf("order:%d", id)
 }
@@ -46,8 +52,6 @@ func (r *RedisRepo) Insert(ctx context.Context, order model.Order) error {
 	return nil
 }
 
-
-var ErrNotExist = errors.New("order does not exist")
 
 func (r *RedisRepo) FindByID(ctx context.Context, id uint64) (model.Order, error) {
 	key := orderIDKey(id)
@@ -113,55 +117,52 @@ func (r *RedisRepo) Update(ctx context.Context, order model.Order) error {
 	return nil
 }
 
-type  FindAllPage struct {
-	Size uint64
-	Offset uint64
-}
-
-type FindResult struct {
-	Orders []model.Order
-	Cursor uint64
-}
 
 func (r *RedisRepo) FindAll(ctx context.Context, page FindAllPage) (FindResult, error) {
-	fmt.Println("FindAll")
-	fmt.Println("page.Offset: ", page.Offset)
-	fmt.Println("page.Size: ", page.Size)
-	res := r.Client.SScan(ctx, "orders", page.Offset, "*", int64(page.Size))
-
-	keys, cursor, err := res.Result()
+	// Find all order keys in Redis
+	keys, err := r.Client.Keys(ctx, "order:*").Result()
 	if err != nil {
-		return FindResult{}, fmt.Errorf("failed to scan keys: %w", err)
-	}
-	
-	fmt.Println("keys: ", keys)
-	fmt.Println("cursor: ", cursor)
-	
-	if len(keys) == 0 {
-		return FindResult{
-			Orders: []model.Order{},
-		}, nil
+		return FindResult{}, fmt.Errorf("failed to retrieve keys: %w", err)
 	}
 
-	xs, err := r.Client.MGet(ctx, keys...).Result()
-	if err != nil {
-		return FindResult{}, fmt.Errorf("failed to get orders: %w", err)
-	}
+	var orders []model.Order
 
-	orders := make([]model.Order, 0, len(xs))
+	// Loop through the keys and fetch each order
+	for _, key := range keys {
+		// Get the order data from Redis
+		orderData, err := r.Client.Get(ctx, key).Result()
 
-	for _, x := range xs {
-		x := x.(string)
-		var order model.Order
-		err := json.Unmarshal([]byte(x), &order)
-		if err != nil {
-			return FindResult{}, fmt.Errorf("failed to unmarshal order: %w", err)
+		// Check if the order data is nil or empty
+		if err == redis.Nil {
+			continue // Key does not exist, skip this one
+		} else if err != nil {
+			return FindResult{}, fmt.Errorf("failed to get order data for key %s: %w", key, err)
 		}
-		orders = append(orders, order)
+
+		// Assuming you have a method to unmarshal the Redis data into an order struct
+		var ord model.Order
+		err = json.Unmarshal([]byte(orderData), &ord)
+		if err != nil {
+			return FindResult{}, fmt.Errorf("failed to unmarshal order data for key %s: %w", key, err)
+		}
+
+		// Append the order to the result set
+		orders = append(orders, ord)
 	}
 
+	// Return the list of orders and the current cursor (pagination)
 	return FindResult{
 		Orders: orders,
-		Cursor: cursor,
+		Cursor: page.Offset + uint64(len(orders)),
 	}, nil
+}
+
+// Use the redis.Client's Ping method
+func (r *RedisRepo) Ping(ctx context.Context) *redis.StatusCmd {
+	return r.Client.Ping(ctx)
+}
+
+// Close closes the Redis connection
+func (r *RedisRepo) Close() error {
+	return r.Client.Close()
 }

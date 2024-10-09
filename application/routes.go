@@ -6,12 +6,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/bohenriksen2020/ms-orders-api/handler"
-	"github.com/bohenriksen2020/ms-orders-api/repository/order"
-
-
 )
 
-func (a *App) loadRoutes()  {
+func (a *App) loadRoutes() {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 
@@ -19,23 +16,23 @@ func (a *App) loadRoutes()  {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	router.Route("/orders", a.loadOrderRoutes) 
+	// Load order-related routes
+	router.Route("/orders", a.loadOrderRoutes)
 
+	// Assign the router to the App's router field
 	a.router = router
 }
 
-
 func (a *App) loadOrderRoutes(route chi.Router) {
+	// Initialize the order handler using the repository provided in a.repo
 	orderHandler := &handler.Order{
-		Repo: &order.RedisRepo {
-			Client: a.rdb,
-		},
+		Repo: a.repo, // Use the repository passed to the App (could be Redis or Postgres)
 	}
 
+	// Define routes for order operations
 	route.Post("/", orderHandler.Create)
 	route.Get("/", orderHandler.List)
 	route.Get("/{id}", orderHandler.GetByID)
 	route.Put("/{id}", orderHandler.UpdateByID)
 	route.Delete("/{id}", orderHandler.DeleteByID)
-
 }

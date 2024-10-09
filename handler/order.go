@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 	"github.com/google/uuid"
-	
+
 	"github.com/bohenriksen2020/ms-orders-api/model"
 	"github.com/bohenriksen2020/ms-orders-api/repository/order"
 	"strconv"
@@ -15,9 +15,8 @@ import (
 
 )
 
-
 type Order struct{
-	Repo *order.RedisRepo
+	Repo order.Repo //*order.RedisRepo
 }
 
 func (h *Order) Create(w http.ResponseWriter, r *http.Request) {
