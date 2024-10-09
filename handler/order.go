@@ -9,6 +9,8 @@ import (
 	
 	"github.com/bohenriksen2020/ms-orders-api/model"
 	"github.com/bohenriksen2020/ms-orders-api/repository/order"
+	"strconv"
+
 )
 
 
@@ -23,6 +25,7 @@ func (o *Order) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		fmt.Println("failed to decode request body: ", err)
+		w.Write([]byte("failed to decode request body: " + err.Error() + "\n"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -54,8 +57,43 @@ func (o *Order) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Order) List(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("List orders")
-	w.WriteHeader(http.StatusOK)
+	cursorStr := r.URL.Query().Get("cursor")
+	if cursorStr == "" {
+		cursorStr = "0"
+	}
+
+	const decimal = 10
+	const bitSize = 64
+	cursor, err := strconv.ParseUint(cursorStr, decimal, bitSize)
+	if err != nil {
+		fmt.Println("failed to parse cursor: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	const size = 50
+	res, err := o.Repo.FindAll(r.Context(), order.FindAllPage{
+		Offset: cursor,
+		Size: size,
+
+	})
+	if err != nil {
+		fmt.Println("failed to find all orders: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	var response struct {
+		Items []model.Order `json:"items"`
+		Next uint64        `json:"next,omitempty"`
+	}
+	response.Items = res.Orders
+	response.Next = res.Cursor
+	data, err := json.Marshal(response)
+	if err != nil {
+		fmt.Println("failed to marshal orders: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(data)	
 }
 
 func (o *Order) GetByID(w http.ResponseWriter, r *http.Request) {
