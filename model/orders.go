@@ -1,6 +1,9 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"time"
+	"github.com/google/uuid"
+)
 
 type Order struct {
 	OrderID 	uint64 `json:"order_id"`
