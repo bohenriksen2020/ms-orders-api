@@ -7,6 +7,8 @@ app = 'ms-orders-api'
 primary_region = 'lhr'
 
 [build]
+  dockerfile = "images/Dockerfile"
+
 
 [env]
   PORT = '3000'
