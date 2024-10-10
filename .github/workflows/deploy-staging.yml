@@ -22,10 +22,10 @@ jobs:
           version: v1.54
 
       - name: Run Tests
-        run: go test -v ./...
+        run: go test -v ./
 
       - name: Build
-        run: go build -v ./...
+        run: go build -v ./
   deploy-staging:
     name: Deploy app to Staging
     runs-on: ubuntu-latest
