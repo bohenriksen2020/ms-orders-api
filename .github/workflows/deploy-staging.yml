@@ -11,6 +11,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check if FLY_API_TOKEN is set
+      - run: echo "FLY_API_TOKEN is set" || exit 1
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          
       - name: Set up Go 1.23.2
         uses: actions/setup-go@v5
         with:
