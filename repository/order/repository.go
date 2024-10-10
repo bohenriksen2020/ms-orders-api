@@ -2,6 +2,7 @@ package order
 
 import (
 	"context"
+
 	"github.com/bohenriksen2020/ms-orders-api/model"
 )
 

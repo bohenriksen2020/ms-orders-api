@@ -4,8 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/bohenriksen2020/ms-orders-api/model"
+
+	// Import PostgreSQL driver for database/sql
 	_ "github.com/lib/pq"
+
+	"github.com/bohenriksen2020/ms-orders-api/model"
 )
 
 // PostgresRepo implements the Repo interface for PostgreSQL
@@ -45,7 +48,13 @@ func (repo *PostgresRepo) FindByID(ctx context.Context, id uint64) (model.Order,
 	`
 
 	var ord model.Order
-	err := repo.DB.QueryRowContext(ctx, query, id).Scan(&ord.OrderID, &ord.CustomerID, &ord.LineItems, &ord.Created, &ord.ShippedAt, &ord.CompletedAt)
+	err := repo.DB.QueryRowContext(ctx, query, id).
+		Scan(&ord.OrderID,
+			&ord.CustomerID,
+			&ord.LineItems,
+			&ord.Created,
+			&ord.ShippedAt,
+			&ord.CompletedAt)
 	if err == sql.ErrNoRows {
 		return ord, ErrNotExist
 	} else if err != nil {

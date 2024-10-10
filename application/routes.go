@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
 	"github.com/bohenriksen2020/ms-orders-api/handler"
 )
 
@@ -12,7 +13,7 @@ func (a *App) loadRoutes() {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	router.Get("/", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 

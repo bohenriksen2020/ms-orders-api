@@ -16,10 +16,10 @@ type Config struct {
 // LoadConfig loads configuration from environment variables
 func LoadConfig() Config {
 	cfg := Config{
-		RedisAddress: "localhost:6379",       // Default Redis address
+		RedisAddress: "localhost:6379",                                        // Default Redis address
 		PostgresDSN:  "postgres://user:pass@localhost/dbname?sslmode=disable", // Default Postgres DSN
-		DatabaseType: "redis",                // Default database is Redis
-		ServerPort:   3000,                   // Default server port
+		DatabaseType: "redis",                                                 // Default database is Redis
+		ServerPort:   3000,                                                    // Default server port
 	}
 
 	// Load Redis address from environment

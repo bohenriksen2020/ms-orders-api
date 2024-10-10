@@ -1,28 +1,30 @@
 package handler
+
 import (
+	"crypto/rand"
+	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
 	"github.com/bohenriksen2020/ms-orders-api/model"
 	"github.com/bohenriksen2020/ms-orders-api/repository/order"
-	"strconv"
-	"github.com/go-chi/chi/v5"
-	"errors"
-
 )
 
-type Order struct{
-	Repo order.Repo //*order.RedisRepo
+type Order struct {
+	Repo order.Repo // *order.RedisRepo
 }
 
 func (h *Order) Create(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		CustomerID uuid.UUID 		`json:"customer_id"`
-		LineItems []model.LineItem 	`json:"line_items"`
+		CustomerID uuid.UUID        `json:"customer_id"`
+		LineItems  []model.LineItem `json:"line_items"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		fmt.Println("failed to decode request body: ", err)
@@ -36,21 +38,28 @@ func (h *Order) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now().UTC()
-	order := model.Order{
-		OrderID: rand.Uint64(), // Don't do this in production
+	orderID := make([]byte, 8)
+	if _, err := rand.Read(orderID); err != nil {
+		// handle error
+		fmt.Println("failed to generate order id: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	ord := model.Order{
+		OrderID:    binary.BigEndian.Uint64(orderID),
 		CustomerID: body.CustomerID,
-		LineItems: body.LineItems,
-		Created: &now,
+		LineItems:  body.LineItems,
+		Created:    &now,
 	}
 
-	err := h.Repo.Insert(r.Context(), order)
+	err := h.Repo.Insert(r.Context(), ord)
 	if err != nil {
 		fmt.Println("failed to insert order: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	res, err := json.Marshal(order)
+	res, err := json.Marshal(ord)
 	if err != nil {
 		fmt.Println("failed to marshal order: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -82,8 +91,7 @@ func (h *Order) List(w http.ResponseWriter, r *http.Request) {
 	const size = 50
 	res, err := h.Repo.FindAll(r.Context(), order.FindAllPage{
 		Offset: cursor,
-		Size: size,
-
+		Size:   size,
 	})
 	if err != nil {
 		fmt.Println("failed to find all orders: ", err)
@@ -95,7 +103,7 @@ func (h *Order) List(w http.ResponseWriter, r *http.Request) {
 
 	var response struct {
 		Items []model.Order `json:"items"`
-		Next uint64        `json:"next,omitempty"`
+		Next  uint64        `json:"next,omitempty"`
 	}
 	response.Items = res.Orders
 	response.Next = res.Cursor
@@ -148,13 +156,11 @@ func (h *Order) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 }
 
 func (h *Order) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Status string `json:"status"`
-
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		fmt.Println("failed to decode requestbody: ", err)
@@ -184,7 +190,6 @@ func (h *Order) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-
 
 	const completedStatus = "completed"
 	const shippedStatus = "shipped"
@@ -223,7 +228,6 @@ func (h *Order) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 }
 
 func (h *Order) DeleteByID(w http.ResponseWriter, r *http.Request) {
@@ -251,4 +255,3 @@ func (h *Order) DeleteByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-

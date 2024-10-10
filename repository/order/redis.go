@@ -3,11 +3,12 @@ package order
 import (
 	"context"
 	"encoding/json"
-	"github.com/redis/go-redis/v9"
-	"github.com/bohenriksen2020/ms-orders-api/model"
-	"fmt"
 	"errors"
+	"fmt"
 
+	"github.com/redis/go-redis/v9"
+
+	"github.com/bohenriksen2020/ms-orders-api/model"
 )
 
 type RedisRepo struct {
@@ -18,7 +19,6 @@ type RedisRepo struct {
 func NewRedisRepo(client *redis.Client) *RedisRepo {
 	return &RedisRepo{Client: client}
 }
-
 
 func orderIDKey(id uint64) string {
 	return fmt.Sprintf("order:%d", id)
@@ -31,7 +31,7 @@ func (r *RedisRepo) Insert(ctx context.Context, order model.Order) error {
 	}
 
 	key := orderIDKey(order.OrderID)
-	
+
 	txn := r.Client.TxPipeline()
 
 	res := txn.SetNX(ctx, key, string(data), 0)
@@ -52,7 +52,6 @@ func (r *RedisRepo) Insert(ctx context.Context, order model.Order) error {
 	return nil
 }
 
-
 func (r *RedisRepo) FindByID(ctx context.Context, id uint64) (model.Order, error) {
 	key := orderIDKey(id)
 	value, err := r.Client.Get(ctx, key).Result()
@@ -63,7 +62,7 @@ func (r *RedisRepo) FindByID(ctx context.Context, id uint64) (model.Order, error
 	} else if err != nil {
 		return model.Order{}, fmt.Errorf("failed to get order: %w", err)
 	}
-	
+
 	var order model.Order
 	err = json.Unmarshal([]byte(value), &order)
 	if err != nil {
@@ -74,7 +73,6 @@ func (r *RedisRepo) FindByID(ctx context.Context, id uint64) (model.Order, error
 	return order, nil
 
 }
-
 
 func (r *RedisRepo) DeleteByID(ctx context.Context, id uint64) error {
 	key := orderIDKey(id)
@@ -91,14 +89,13 @@ func (r *RedisRepo) DeleteByID(ctx context.Context, id uint64) error {
 		txn.Discard()
 		return fmt.Errorf("failed to remove order from set: %w", err)
 	}
-	
+
 	if _, err := txn.Exec(ctx); err != nil {
 		return fmt.Errorf("failed to exec transaction: %w", err)
 	}
 
 	return nil
 }
-
 
 func (r *RedisRepo) Update(ctx context.Context, order model.Order) error {
 	data, err := json.Marshal(order)
@@ -116,7 +113,6 @@ func (r *RedisRepo) Update(ctx context.Context, order model.Order) error {
 
 	return nil
 }
-
 
 func (r *RedisRepo) FindAll(ctx context.Context, page FindAllPage) (FindResult, error) {
 	// Find all order keys in Redis

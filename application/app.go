@@ -7,9 +7,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bohenriksen2020/ms-orders-api/repository/order"
-	"github.com/redis/go-redis/v9"
+	// Import PostgreSQL driver for database/sql
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
+
+	"github.com/bohenriksen2020/ms-orders-api/repository/order"
 )
 
 type App struct {
@@ -41,7 +43,7 @@ func New(config Config) *App {
 	}
 
 	app := &App{
-		repo:   repo,  // Use the selected Repo implementation (Redis or Postgres)
+		repo:   repo, // Use the selected Repo implementation (Redis or Postgres)
 		config: config,
 	}
 	app.loadRoutes() // Define your routes here
@@ -75,10 +77,10 @@ func (a *App) Start(ctx context.Context) error {
 
 	// Setup and start the HTTP server
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", a.config.ServerPort),
-		Handler: a.router,
+		Addr:              fmt.Sprintf(":%d", a.config.ServerPort),
+		Handler:           a.router,
+		ReadHeaderTimeout: 5 * time.Second, // Prevent Slowloris attacks
 	}
-
 	fmt.Println("Server is starting")
 
 	ch := make(chan error, 1)
@@ -99,5 +101,5 @@ func (a *App) Start(ctx context.Context) error {
 		defer cancel()
 		return server.Shutdown(timeout)
 	}
-	
+
 }
