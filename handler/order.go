@@ -26,7 +26,11 @@ func (h *Order) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		fmt.Println("failed to decode request body: ", err)
-		w.Write([]byte("failed to decode request body: " + err.Error() + "\n"))
+		if _, err = w.Write([]byte("failed to decode request body: " + err.Error() + "\n")); err != nil {
+			fmt.Println("failed to write response: ", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -53,7 +57,11 @@ func (h *Order) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(res)
+	if _, err := w.Write(res); err != nil {
+		fmt.Println("failed to write response: ", err)
+		http.Error(w, "failed to write response", http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -97,7 +105,11 @@ func (h *Order) List(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Write(data)	
+	if _, err := w.Write(data); err != nil {
+		fmt.Println("failed to write response: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Order) GetByID(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +142,12 @@ func (h *Order) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(res)
+	if _, err := w.Write(res); err != nil {
+		fmt.Println("failed to write response: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	
 }
 
@@ -141,7 +158,11 @@ func (h *Order) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		fmt.Println("failed to decode requestbody: ", err)
-		w.Write([]byte("failed to decode request body: " + err.Error() + "\n"))
+		if _, err = w.Write([]byte("failed to decode request body: " + err.Error() + "\n")); err != nil {
+			fmt.Println("failed to write response: ", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
