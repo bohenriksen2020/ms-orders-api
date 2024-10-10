@@ -19,27 +19,24 @@ jobs:
         with:
           go-version: 1.23.2
 
-      - name: Cache Go modules
+      - name: Cache golangci-lint
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.cache/go-build
-            ${{ github.workspace }}/go/pkg/mod
-          key: go-mod-${{ hashFiles('**/go.sum') }}
+          path: ~/.cache/golangci-lint
+          key: golangci-lint-cache-v1-${{ runner.os }}-${{ hashFiles('**/go.sum') }}-${{ github.run_id }}
           restore-keys: |
-            go-mod-
+            golangci-lint-cache-v1-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
 
       - name: Download Go modules
         run: go mod download
 
-      - name: Cache Go build
+      - name: Cache golangci-lint
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.cache/go-build
-          key: go-build-${{ hashFiles('**/*.go', 'go.sum') }}
+          path: ~/.cache/golangci-lint
+          key: golangci-lint-cache-v1-${{ runner.os }}-${{ hashFiles('**/go.sum') }}-${{ github.run_id }}
           restore-keys: |
-            go-build-
+            golangci-lint-cache-v1-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
