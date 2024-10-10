@@ -7,6 +7,7 @@ app = 'ms-orders-api'
 primary_region = 'lhr'
 
 [build]
+  dockerfile = "images/Dockerfile"
 
 [env]
   PORT = '3000'
@@ -23,3 +24,4 @@ primary_region = 'lhr'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
+
